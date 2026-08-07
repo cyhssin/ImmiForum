@@ -20,3 +20,9 @@ class User(Base):
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     role = relationship("Role", back_populates="users")
+    questions = relationship("Question", back_populates="author")
+    comments = relationship("Comment", back_populates="author")
+    likes = relationship("Like", back_populates="user")
+    bookmarks = relationship("Bookmark", back_populates="user")
+    followers = relationship("Follow", foreign_keys="[Follow.following_id]", back_populates="following")
+    following = relationship("Follow", foreign_keys="[Follow.follower_id]", back_populates="follower")
