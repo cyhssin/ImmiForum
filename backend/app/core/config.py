@@ -1,3 +1,4 @@
+import os
 from pydantic_settings import BaseSettings
 from typing import Optional
 
@@ -6,7 +7,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql://postgres:postgres@db:5432/forum_db"
 
     # JWT
-    SECRET_KEY: str = "change-me-in-production-use-a-long-random-string"
+    SECRET_KEY: str = os.getenv("SECRET_KEY")
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -14,15 +15,16 @@ class Settings(BaseSettings):
     # Email Verification
     VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
 
-    # SMTP (placeholder — console logging used in dev)
-    SMTP_HOST: Optional[str] = None
-    SMTP_PORT: Optional[int] = None
-    SMTP_USER: Optional[str] = None
+    # SMTP (Gmail)
+    SMTP_HOST: Optional[str] = "smtp.gmail.com"
+    SMTP_PORT: Optional[int] = 587
+    SMTP_USER: Optional[str] = os.getenv("SMTP_USER")
     SMTP_PASSWORD: Optional[str] = None
-    EMAILS_FROM_EMAIL: str = "noreply@forum.com"
+    SMTP_STARTTLS: bool = True
+    EMAILS_FROM_EMAIL: str = os.getenv("EMAILS_FROM_EMAIL")
 
     # App
-    APP_NAME: str = "Forum API"
+    APP_NAME: str = "Immigrant Forum"
     APP_URL: str = "http://localhost:8000"
     API_V1_PREFIX: str = "/api/v1"
 

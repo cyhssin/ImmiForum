@@ -1,21 +1,24 @@
 from datetime import datetime, timedelta
 from typing import Any, Dict, Optional
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from app.core.config import settings
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8"),
+    )
 
 def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt(),
+    ).decode("utf-8")
 
-
+# JWT
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
     expire = datetime.utcnow() + (
         expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -37,7 +40,7 @@ def create_email_verification_token(email: str) -> str:
     to_encode = {"sub": email, "exp": expire, "type": "verification"}
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
-
+# JWT verification
 def verify_token(token: str, token_type: str) -> Optional[Dict[str, Any]]:
     """Decode a JWT and validate its type. Returns payload or None."""
     try:
