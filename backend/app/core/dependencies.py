@@ -1,3 +1,6 @@
+# backend/app/core/dependencies.py
+from typing import List
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -8,6 +11,8 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+
+# ── Base auth dependencies ──────────────────────────────────────────
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -49,12 +54,43 @@ def get_current_verified_user(
         )
     return current_user
 
+# ── Role-based dependencies ────────────────────────────────────────
+
+def require_role(*allowed_roles: str):
+    """Dependency factory: only allows users with one of the specified roles."""
+    def _check(current_user: User = Depends(get_current_user)) -> User:
+        if not current_user.role or current_user.role.name not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions",
+            )
+        return current_user
+    return _check
+
+def require_permission(permission: str):
+    """Dependency factory: only allows users whose role includes the permission."""
+    def _check(current_user: User = Depends(get_current_user)) -> User:
+        if not current_user.role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions",
+            )
+        if permission not in current_user.role.permissions:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions",
+            )
+        return current_user
+    return _check
+
+# ── Convenience shortcuts ──────────────────────────────────────────
+
 def get_current_admin_user(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_role("admin")),
 ) -> User:
-    if not current_user.role or current_user.role.name != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions",
-        )
+    return current_user
+
+def get_current_moderator_user(
+    current_user: User = Depends(require_role("moderator", "admin")),
+) -> User:
     return current_user
