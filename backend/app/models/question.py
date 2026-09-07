@@ -23,7 +23,7 @@ class Question(Base):
     body = Column(Text, nullable=False)
     author_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
-    is_closed = Column(String(20), default="open", nullable=False)
+    status = Column(String(20), default="open", nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
