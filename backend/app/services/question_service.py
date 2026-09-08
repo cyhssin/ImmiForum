@@ -165,3 +165,4 @@ def _to_response(q: Question, counts: dict) -> QuestionResponse:
         created_at=q.created_at,
         updated_at=q.updated_at,
     )
+question_to_response = _to_response
