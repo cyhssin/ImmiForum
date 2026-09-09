@@ -1,5 +1,4 @@
-# backend/app/core/dependencies.py
-from typing import List
+from typing import List, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -11,8 +10,11 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
+oauth2_scheme_optional = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login", auto_error=False
+)
 
-# ── Base auth dependencies ──────────────────────────────────────────
+# Base auth dependencies 
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -54,7 +56,27 @@ def get_current_verified_user(
         )
     return current_user
 
-# ── Role-based dependencies ────────────────────────────────────────
+def get_optional_current_user(
+    token: Optional[str] = Depends(oauth2_scheme_optional),
+    db: Session = Depends(get_db),
+) -> Optional[User]:
+    """Anonymous-safe variant: returns None (instead of 401) when no token,
+    an invalid token, or a missing user is supplied. Used for public
+    endpoints that personalize their response."""
+    if token is None:
+        return None
+
+    payload = verify_token(token, "access")
+    if payload is None:
+        return None
+
+    user_id: str = payload.get("sub")
+    if user_id is None:
+        return None
+
+    return UserRepository(db).get_by_id(user_id)
+
+# Role-based dependencies
 
 def require_role(*allowed_roles: str):
     """Dependency factory: only allows users with one of the specified roles."""
@@ -83,7 +105,7 @@ def require_permission(permission: str):
         return current_user
     return _check
 
-# ── Convenience shortcuts ──────────────────────────────────────────
+# Convenience shortcuts
 
 def get_current_admin_user(
     current_user: User = Depends(require_role("admin")),

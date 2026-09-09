@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app.core.config import settings
 from app.db.seed import seed_roles
-from app.routers import admin, auth, categories, comments, questions, reactions, tags, users
+from app.routers import admin, auth, categories, comments, follows, questions, reactions, tags, users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -24,6 +24,7 @@ app.include_router(categories.router, prefix=settings.API_V1_PREFIX)
 app.include_router(tags.router, prefix=settings.API_V1_PREFIX)
 app.include_router(comments.router, prefix=settings.API_V1_PREFIX)
 app.include_router(reactions.router, prefix=settings.API_V1_PREFIX)
+app.include_router(follows.router, prefix=settings.API_V1_PREFIX)
 app.include_router(users.router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/")
