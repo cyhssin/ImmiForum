@@ -154,6 +154,7 @@ def _to_response(q: Question, counts: dict) -> QuestionResponse:
         slug=q.slug,
         body=q.body,
         status=q.status,
+        is_pinned=bool(q.is_pinned),
         author={"id": q.author.id, "username": q.author.username},
         category=(
             {"id": q.category.id, "name": q.category.name} if q.category else None

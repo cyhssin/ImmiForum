@@ -44,12 +44,13 @@ class QuestionRepository:
         offset: int = 0,
         limit: int = 10,
     ) -> tuple[Sequence[Question], int]:
+        """Global listing: pinned questions first, then newest."""
         query = self._apply_filters(
             self._base_query(), search=search, tag=tag, category_id=category_id
         )
         total = query.order_by(None).count()
         items = (
-            query.order_by(Question.created_at.desc())
+            query.order_by(Question.is_pinned.desc(), Question.created_at.desc())
             .offset(offset)
             .limit(limit)
             .all()
@@ -64,6 +65,7 @@ class QuestionRepository:
         offset: int = 0,
         limit: int = 10,
     ) -> tuple[Sequence[Question], int]:
+        """Profile tab: plain chronological timeline (no pin promotion)."""
         query = self._base_query().filter(Question.author_id == author_id)
         if status:
             query = query.filter(Question.status == status)

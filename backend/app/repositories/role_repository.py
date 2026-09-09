@@ -17,6 +17,9 @@ class RoleRepository:
     def get_all(self) -> list[Role]:
         return self.db.query(Role).order_by(Role.name).all()
 
+    def list(self) -> list[Role]:
+        return self.db.query(Role).order_by(Role.name.asc()).all()
+
     def create(self, role: Role) -> Role:
         self.db.add(role)
         self.db.commit()

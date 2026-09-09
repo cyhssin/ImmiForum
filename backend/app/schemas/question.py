@@ -34,6 +34,7 @@ class QuestionResponse(BaseModel):
     slug: str
     body: str
     status: str
+    is_pinned: bool = False
     author: AuthorBrief
     category: Optional[CategoryBrief] = None
     tags: list[TagBrief] = []
