@@ -4,6 +4,7 @@ from uuid import UUID
 from sqlalchemy.orm import Session
 
 from app.models.comment import Comment
+from app.models.question import Question
 from app.models.user import User
 
 class CommentRepository:
@@ -26,6 +27,24 @@ class CommentRepository:
             .order_by(Comment.created_at.asc(), Comment.id.asc())
             .all()
         )
+
+    def list_for_user(
+        self, author_id: UUID, *, offset: int, limit: int
+    ) -> tuple[list[tuple[Comment, str, str]], int]:
+        """(Comment, question_slug, question_title) rows, newest first, plus total."""
+        query = (
+            self.db.query(Comment, Question.slug, Question.title)
+            .join(Question, Comment.question_id == Question.id)
+            .filter(Comment.author_id == author_id)
+        )
+        total = query.order_by(None).count()
+        items = (
+            query.order_by(Comment.created_at.desc(), Comment.id.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+        return items, total
 
     def create(self, comment: Comment) -> Comment:
         self.db.add(comment)

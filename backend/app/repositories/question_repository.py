@@ -56,6 +56,26 @@ class QuestionRepository:
         )
         return items, total
 
+    def list_by_author(
+        self,
+        author_id: UUID,
+        *,
+        status: Optional[str] = None,
+        offset: int = 0,
+        limit: int = 10,
+    ) -> tuple[Sequence[Question], int]:
+        query = self._base_query().filter(Question.author_id == author_id)
+        if status:
+            query = query.filter(Question.status == status)
+        total = query.order_by(None).count()
+        items = (
+            query.order_by(Question.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+            .all()
+        )
+        return items, total
+
     def get_by_id(self, question_id: UUID) -> Optional[Question]:
         return self._base_query().filter(Question.id == question_id).first()
 

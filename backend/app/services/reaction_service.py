@@ -44,6 +44,19 @@ class ReactionService:
             question_ids=self.like_repo.get_ids_for_user(current_user.id)
         )
 
+    def list_liked_questions(
+        self, current_user: User, *, page: int, size: int
+    ) -> tuple[list, int]:
+        """Paginated liked-question cards for the dashboard Likes tab."""
+        questions, total = self.like_repo.list_questions_for_user(
+            current_user.id, offset=(page - 1) * size, limit=size
+        )
+        counts = self.question_repo.get_counts([q.id for q in questions])
+        return (
+            [question_to_response(q, counts.get(q.id, {})) for q in questions],
+            total,
+        )
+
     # Bookmarks
 
     def toggle_bookmark(
