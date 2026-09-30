@@ -99,10 +99,7 @@ class AuthService:
             )
 
         if user.is_verified:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already verified",
-            )
+            return
 
         user.is_verified = True
         self.user_repo.update(user)

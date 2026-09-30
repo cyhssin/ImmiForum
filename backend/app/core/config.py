@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "Immigrant Forum"
     APP_URL: str = "http://localhost:8000"
+    FRONTEND_URL: str = "http://localhost:3000"
     API_V1_PREFIX: str = "/api/v1"
 
     class Config:

@@ -1,5 +1,6 @@
 import logging
 from email.message import EmailMessage
+from urllib.parse import urlencode
 
 from aiosmtplib import SMTP
 
@@ -13,20 +14,23 @@ class EmailService:
     @staticmethod
     async def send_verification_email(email: str, token: str) -> None:
         verification_url = (
-            f"{settings.APP_URL}"
-            f"{settings.API_V1_PREFIX}"
-            f"/auth/verify-email?token={token}"
+            f"{settings.FRONTEND_URL.rstrip('/')}"
+            f"/auth/verify-email?{urlencode({'token': token})}"
         )
 
         subject = "Verify your email — Forum"
 
         body = (
-            f"Hello,\n\n"
-            f"Please verify your email by clicking the link below:\n\n"
+            f"Hey there!\n\n"
+            f"Thank you for joining our community. We’re excited to have you with us!\n\n"
+            f"To get started, please verify your email address by clicking the button below:\n\n"
             f"{verification_url}\n\n"
             f"This link expires in "
             f"{settings.VERIFICATION_TOKEN_EXPIRE_HOURS} hours.\n\n"
-            f"If you did not create an account, ignore this email."
+            f"If you didn’t create an account with us, you can safely ignore this email.\n\n"
+            f"Welcome to the community! 🎉\n\n"
+            f"Best regards,\n"
+            f"The Immigrants Team"
         )
 
         # SMTP is not configured
