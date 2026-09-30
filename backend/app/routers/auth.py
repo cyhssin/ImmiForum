@@ -27,7 +27,7 @@ async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
-    """OAuth2-compatible login. Use **email** as the username field."""
+    """OAuth2-compatible login using a username or email and password."""
     service = AuthService(db)
     return await service.login(form_data.username, form_data.password)
 

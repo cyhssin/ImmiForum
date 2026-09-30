@@ -57,13 +57,15 @@ class AuthService:
 
     # ── Login ───────────────────────────────────────────────────────
 
-    async def login(self, email: str, password: str):
-        user = self.user_repo.get_by_email(email)
+    async def login(self, identifier: str, password: str):
+        user = self.user_repo.get_by_email(identifier)
+        if user is None:
+            user = self.user_repo.get_by_username(identifier)
 
         if not user or not verify_password(password, user.hashed_password):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect email or password",
+                detail="Incorrect username, email, or password",
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
