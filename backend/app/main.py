@@ -20,6 +20,7 @@ from app.routers import (
     comments,
     follows,
     moderation,
+    notifications,
     questions,
     reactions,
     tags,
@@ -78,11 +79,14 @@ app = FastAPI(
 
 # CORS — configure via env, e.g. CORS_ORIGINS=http://localhost:3000,https://myforum.com
 _origins = [
-    o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if o.strip()
+    "https://immiforum.ir",
+    "https://www.immiforum.ir",
+    "http://localhost:3000",
 ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_origins or ["*"],
+    allow_origins=_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -102,6 +106,7 @@ app.include_router(reactions.router, prefix=settings.API_V1_PREFIX)
 app.include_router(follows.router, prefix=settings.API_V1_PREFIX)
 app.include_router(users.router, prefix=settings.API_V1_PREFIX)
 app.include_router(moderation.router, prefix=settings.API_V1_PREFIX)
+app.include_router(notifications.router, prefix=settings.API_V1_PREFIX)
 
 @app.get("/", include_in_schema=False)
 def root():

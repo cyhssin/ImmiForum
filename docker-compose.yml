@@ -33,13 +33,22 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 30
       REFRESH_TOKEN_EXPIRE_DAYS: 7
       VERIFICATION_TOKEN_EXPIRE_HOURS: 24
-      APP_NAME: Forum API
+      APP_NAME: Immigrants Forum
       APP_URL: http://localhost:8000
+      FRONTEND_URL: http://localhost:3000
       API_V1_PREFIX: /api/v1
+      CORS_ORIGINS: http://localhost:3000,http://frontend:3000
 
     depends_on:
       db:
         condition: service_healthy
+
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
     volumes:
       - ./backend:/app
@@ -47,6 +56,22 @@ services:
     command: >
       sh -c "alembic upgrade head &&
       uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: /api/v1
+        INTERNAL_API_URL: http://backend:8000
+    environment:
+      NEXT_PUBLIC_API_URL: /api/v1
+      INTERNAL_API_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
 
 volumes:
   postgres_data:

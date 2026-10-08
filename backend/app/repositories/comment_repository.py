@@ -52,6 +52,11 @@ class CommentRepository:
         self.db.refresh(comment)
         return comment
 
+    def add(self, comment: Comment) -> Comment:
+        self.db.add(comment)
+        self.db.flush()
+        return comment
+
     def update(self, comment: Comment) -> Comment:
         self.db.commit()
         self.db.refresh(comment)

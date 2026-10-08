@@ -3,16 +3,20 @@ from uuid import UUID
 from fastapi import HTTPException, status
 
 from app.models.comment import Comment
+from app.models.notification import Notification
 from app.models.question import Question
 from app.models.user import User
 from app.repositories.comment_repository import CommentRepository
+from app.repositories.notification_repository import NotificationRepository
 from app.repositories.question_repository import QuestionRepository
 from app.schemas.comment import CommentCreate, CommentResponse, CommentUpdate
 from app.schemas.question import AuthorBrief
 
 class CommentService:
     def __init__(self, db):
+        self.db = db
         self.comment_repo = CommentRepository(db)
+        self.notification_repo = NotificationRepository(db)
         self.question_repo = QuestionRepository(db)
 
     # Read (tree)
@@ -59,6 +63,7 @@ class CommentService:
                 detail="Comment body cannot be empty",
             )
 
+        parent = None
         if data.parent_id is not None:
             parent = self.comment_repo.get_by_id(data.parent_id)
             if parent is None:
@@ -72,7 +77,7 @@ class CommentService:
                     detail="Parent comment does not belong to this question",
                 )
 
-        comment = self.comment_repo.create(
+        comment = self.comment_repo.add(
             Comment(
                 body=body,
                 question_id=question.id,
@@ -80,6 +85,22 @@ class CommentService:
                 parent_id=data.parent_id,
             )
         )
+        recipients: dict[UUID, str] = {}
+        if question.author_id != current_user.id:
+            recipients[question.author_id] = "question_comment"
+        if parent is not None and parent.author_id != current_user.id:
+            recipients[parent.author_id] = "comment_reply"
+        for recipient_id, notification_type in recipients.items():
+            self.notification_repo.add(
+                Notification(
+                    recipient_id=recipient_id,
+                    actor_id=current_user.id,
+                    comment_id=comment.id,
+                    notification_type=notification_type,
+                )
+            )
+        self.db.commit()
+        self.db.refresh(comment)
         return _to_response(comment, current_user.username)
 
     # Update (author only) 

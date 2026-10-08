@@ -8,6 +8,7 @@ from app.models.comment import Comment
 from app.models.like import Like
 from app.models.bookmark import Bookmark
 from app.models.follow import Follow
+from app.models.notification import Notification
 
 __all__ = [
     "Role",
@@ -20,4 +21,5 @@ __all__ = [
     "Like",
     "Bookmark",
     "Follow",
+    "Notification",
 ]
