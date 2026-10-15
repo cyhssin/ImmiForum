@@ -33,6 +33,15 @@ def my_liked_question_ids(
     """IDs of questions the current user has liked (for UI highlighting)."""
     return ReactionService(db).list_liked_question_ids(current_user)
 
+
+@router.get("/users/me/bookmark-ids", response_model=LikedQuestionsResponse)
+def my_bookmarked_question_ids(
+    current_user: User = Depends(get_current_verified_user),
+    db: Session = Depends(get_db),
+):
+    """IDs of questions the current user has bookmarked (for UI highlighting)."""
+    return ReactionService(db).list_bookmarked_question_ids(current_user)
+
 @router.post(
     "/questions/{question_id}/bookmark", response_model=BookmarkToggleResponse
 )

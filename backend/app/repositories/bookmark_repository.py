@@ -35,6 +35,15 @@ class BookmarkRepository:
         )
         self.db.commit()
 
+    def get_ids_for_user(self, user_id: UUID) -> list[UUID]:
+        rows = (
+            self.db.query(Bookmark.question_id)
+            .filter(Bookmark.user_id == user_id)
+            .order_by(Bookmark.created_at.desc())
+            .all()
+        )
+        return [row[0] for row in rows]
+
     def list_questions_for_user(
         self, user_id: UUID, *, offset: int, limit: int
     ) -> tuple[list[Question], int]:

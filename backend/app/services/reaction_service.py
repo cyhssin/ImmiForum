@@ -44,6 +44,11 @@ class ReactionService:
             question_ids=self.like_repo.get_ids_for_user(current_user.id)
         )
 
+    def list_bookmarked_question_ids(self, current_user: User) -> LikedQuestionsResponse:
+        return LikedQuestionsResponse(
+            question_ids=self.bookmark_repo.get_ids_for_user(current_user.id)
+        )
+
     def list_liked_questions(
         self, current_user: User, *, page: int, size: int
     ) -> tuple[list, int]:
