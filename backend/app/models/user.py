@@ -17,6 +17,8 @@ class User(Base):
     is_verified = Column(Boolean, default=False, nullable=False)
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
+    password_reset_token_hash = Column(String(64), nullable=True)
+    password_reset_expires_at = Column(DateTime(timezone=True), nullable=True)
     role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())

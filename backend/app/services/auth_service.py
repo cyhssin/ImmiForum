@@ -1,6 +1,11 @@
+import hashlib
+import secrets
+from datetime import datetime, timedelta, timezone
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import (
     create_access_token,
     create_email_verification_token,
@@ -12,7 +17,7 @@ from app.core.security import (
 from app.models.role import Role
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import UserRegister, UserResponse
+from app.schemas.auth import PasswordResetConfirm, UserRegister, UserResponse
 from app.services.email_service import EmailService
 
 class AuthService:
@@ -144,6 +149,44 @@ class AuthService:
 
         token = create_email_verification_token(user.email)
         await self.email_service.send_verification_email(user.email, token)
+
+    # ── Password reset ──────────────────────────────────────────────
+
+    async def request_password_reset(self, email: str) -> None:
+        user = self.user_repo.get_by_email(email)
+        if not user or not user.is_active:
+            return
+
+        token = secrets.token_urlsafe(32)
+        user.password_reset_token_hash = hashlib.sha256(token.encode()).hexdigest()
+        user.password_reset_expires_at = datetime.now(timezone.utc) + timedelta(
+            hours=settings.PASSWORD_RESET_TOKEN_EXPIRE_HOURS
+        )
+        self.user_repo.update(user)
+        await self.email_service.send_password_reset_email(user.email, token)
+
+    def reset_password(self, data: PasswordResetConfirm) -> None:
+        token_hash = hashlib.sha256(data.token.encode()).hexdigest()
+        user = (
+            self.db.query(User)
+            .filter(User.password_reset_token_hash == token_hash)
+            .first()
+        )
+        expires_at = user.password_reset_expires_at if user else None
+        if (
+            not user
+            or not expires_at
+            or expires_at <= datetime.now(timezone.utc)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid or expired password reset link",
+            )
+
+        user.hashed_password = get_password_hash(data.new_password)
+        user.password_reset_token_hash = None
+        user.password_reset_expires_at = None
+        self.user_repo.update(user)
 
 # ── Helper ──────────────────────────────────────────────────────────
 

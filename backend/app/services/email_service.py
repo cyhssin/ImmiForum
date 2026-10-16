@@ -90,3 +90,53 @@ class EmailService:
                 await smtp.quit()
             except Exception:
                 pass
+
+    @staticmethod
+    async def send_password_reset_email(email: str, token: str) -> None:
+        reset_url = (
+            f"{settings.FRONTEND_URL.rstrip('/')}"
+            f"/auth/reset-password?{urlencode({'token': token})}"
+        )
+        subject = "Reset your password — Forum"
+        body = (
+            "A request was made to reset the password for your account.\n\n"
+            f"Use this link to choose a new password:\n\n{reset_url}\n\n"
+            f"This link expires in {settings.PASSWORD_RESET_TOKEN_EXPIRE_HOURS} hour(s).\n\n"
+            "If you did not request a password reset, you can ignore this email."
+        )
+
+        if not settings.SMTP_HOST:
+            logger.info("SMTP not configured — printing password reset email to console")
+            print(
+                f"\n{'=' * 50}\n"
+                "  PASSWORD RESET EMAIL\n"
+                f"  To:  {email}\n"
+                f"  URL: {reset_url}\n"
+                f"{'=' * 50}\n"
+            )
+            return
+
+        message = EmailMessage()
+        message["From"] = settings.EMAILS_FROM_EMAIL
+        message["To"] = email
+        message["Subject"] = subject
+        message.set_content(body)
+
+        smtp = SMTP(
+            hostname=settings.SMTP_HOST,
+            port=settings.SMTP_PORT or 587,
+            start_tls=settings.SMTP_STARTTLS,
+        )
+        try:
+            await smtp.connect()
+            await smtp.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            await smtp.send_message(message)
+            logger.info("Password reset email sent to %s", email)
+        except Exception:
+            logger.exception("Failed to send password reset email to %s", email)
+            raise
+        finally:
+            try:
+                await smtp.quit()
+            except Exception:
+                pass

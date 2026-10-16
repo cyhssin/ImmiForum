@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     # Email Verification
     VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
+    PASSWORD_RESET_TOKEN_EXPIRE_HOURS: int = 1
 
     # SMTP (Gmail)
     SMTP_HOST: Optional[str] = "smtp.gmail.com"

@@ -27,6 +27,13 @@ class VerificationRequest(BaseModel):
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
 
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+
+class PasswordResetConfirm(BaseModel):
+    token: str = Field(..., min_length=32, max_length=200)
+    new_password: str = Field(..., min_length=8, max_length=100)
+
 class UserResponse(BaseModel):
     id: UUID
     email: str

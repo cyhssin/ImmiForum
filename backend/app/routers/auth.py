@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.schemas.auth import (
     MessageResponse,
+    PasswordResetConfirm,
+    PasswordResetRequest,
     RefreshTokenRequest,
     ResendVerificationRequest,
     Token,
@@ -58,3 +60,25 @@ async def resend_verification(
     return MessageResponse(
         message="If the email exists and is not yet verified, a new link has been sent"
     )
+
+@router.post("/forgot-password", response_model=MessageResponse)
+async def forgot_password(
+    data: PasswordResetRequest,
+    db: Session = Depends(get_db),
+):
+    """Send a password reset link without revealing whether the email exists."""
+    service = AuthService(db)
+    await service.request_password_reset(data.email)
+    return MessageResponse(
+        message="If an active account exists for this email, a password reset link has been sent"
+    )
+
+@router.post("/reset-password", response_model=MessageResponse)
+async def reset_password(
+    data: PasswordResetConfirm,
+    db: Session = Depends(get_db),
+):
+    """Set a new password using a valid, single-use reset token."""
+    service = AuthService(db)
+    service.reset_password(data)
+    return MessageResponse(message="Password successfully reset")
